@@ -21,6 +21,9 @@ push=false
 export GOPATH
 workdir="${WORKDIR:-$PWD}"
 
+destdir="${workdir}/kata-static"
+mkdir -p "${destdir}"
+
 exit_handler() {
 	[ -d "${tmp_dir}" ] || sudo rm -rf "${tmp_dir}"
 }
@@ -69,6 +72,7 @@ EOT
 
 #Install guest image/initrd asset
 install_image() {
+	kata_version=${1:-kata_version}
 	image_destdir="${destdir}/${prefix}/share/kata-containers/"
 	info "Create image"
 	image_tarball=$(find . -name 'kata-containers-'"${kata_version}"'-*.tar.gz')
@@ -85,38 +89,36 @@ install_image() {
 	ln -sf "${image}" kata-containers.img
 	ln -sf "${initrd}" kata-containers-initrd.img
 	popd >>/dev/null
+	pushd ${destdir}
+	tar -czvf ../kata-image.tar.gz *
+	popd
 }
 
-#Install kernel asset
+# Install kernel asset
 install_kernel() {
-	go get "github.com/${project}/packaging" || true
-	(
-		cd ${GOPATH}/src/github.com/${project}/packaging >>/dev/null
-		git checkout "${kata_version}-kernel-config" ||
-		git checkout "${kata_version}"
-
-		info "build kernel"
-		./kernel/build-kernel.sh setup
-		./kernel/build-kernel.sh build
-		info "install kernel"
-		DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
-	)
+  pushd "${script_dir}/../"
+  info "build kernel"
+  ./kernel/build-kernel.sh setup
+  ./kernel/build-kernel.sh build
+  info "install kernel"
+  DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
+  popd
+  pushd ${destdir}
+  tar -czvf ../kata-kernel.tzt.gz *
+  popd
 }
 
 # Install static nemu asset
 install_nemu() {
-	info "build static nemu"
-	"${script_dir}/../static-build/nemu/build-static-nemu.sh"
-	info "Install static nemu"
-	tar xf kata-nemu-static.tar.gz -C "${destdir}"
+  info "build static nemu"
+  "${script_dir}/../static-build/nemu/build-static-nemu.sh"
 }
+
 
 # Install static qemu asset
 install_qemu() {
 	info "build static qemu"
 	"${script_dir}/../static-build/qemu/build-static-qemu.sh"
-	info "Install static qemu"
-	tar xf kata-qemu-static.tar.gz -C "${destdir}"
 }
 
 # Install static firecracker asset
@@ -127,11 +129,14 @@ install_firecracker() {
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744  firecracker/firecracker-static "${destdir}/opt/kata/bin/firecracker"
 	sudo install -D --owner root --group root --mode 0744  firecracker/jailer-static "${destdir}/opt/kata/bin/jailer"
-
+	pushd ${destdir}
+	tar -czvf ../kata-firecracker-static.tar.gz *
+	popd
 }
 
 #Install all components that are not assets
 install_kata_components() {
+	kata_version=${1:-kata_version}
 	for p in "${projects[@]}"; do
 		echo "Download ${p}"
 		go get "github.com/${project}/$p" || true
@@ -174,6 +179,16 @@ EOT
 	sudo chmod +x kata-nemu
 
 	popd
+	pushd ${destdir}
+	tar -czvf ../kata-components.tar.gz *
+	popd
+}
+
+untar_qemu_binaries() {
+	info "Install static qemu"
+	tar xf kata-qemu-static.tar.gz -C "${destdir}"
+	info "Install static nemu"
+	tar xf kata-nemu-static.tar.gz -C "${destdir}"
 }
 
 main() {
@@ -199,6 +214,7 @@ main() {
 	install_qemu
 	install_nemu
 	install_firecracker
+	untar_qemu_binaries
 	tarball_name="${destdir}.tar.xz"
 	pushd "${destdir}" >>/dev/null
 	tar cfJ "${tarball_name}" "./opt"
@@ -210,4 +226,6 @@ main() {
 	fi
 }
 
-main $@
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main $@
+fi
