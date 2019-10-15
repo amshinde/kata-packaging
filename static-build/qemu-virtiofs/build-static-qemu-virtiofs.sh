@@ -17,8 +17,8 @@ packaging_dir="${script_dir}/../.."
 qemu_virtiofs_repo=$(get_from_kata_deps "assets.hypervisor.qemu-experimental.url")
 # This tag will be supported on the runtime versions.yaml
 qemu_virtiofs_tag=$(get_from_kata_deps "assets.hypervisor.qemu-experimental.tag")
-qemu_tar="kata-qemu-static.tar.gz"
-qemu_tmp_tar="kata-qemu-static-tmp.tar.gz"
+qemu_tar="kata-qemu-virtiofs-static.tar.gz"
+qemu_tmp_tar="kata-qemu-virtiofs-static-tmp.tar.gz"
 
 info "Build ${qemu_virtiofs_repo} tag: ${qemu_virtiofs_tag}"
 
