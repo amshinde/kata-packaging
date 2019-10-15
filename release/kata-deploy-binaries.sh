@@ -153,7 +153,7 @@ install_firecracker() {
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744  firecracker/firecracker-static "${destdir}/opt/kata/bin/firecracker"
 	sudo install -D --owner root --group root --mode 0744  firecracker/jailer-static "${destdir}/opt/kata/bin/jailer"
-
+	tar -czvf firecracker-static.tar.gz "${destdir}/opt"
 }
 
 install_docker_config_script() {
