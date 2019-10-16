@@ -108,7 +108,9 @@ install_image() {
 	ln -sf "${image}" kata-containers.img
 	ln -sf "${initrd}" kata-containers-initrd.img
 	popd >>/dev/null
-	tar -czvf image.tar.gz ${destdir}
+	pushd ${destdir}
+	tar -czvf ../kata-image.tar.gz *
+	popd
 }
 
 #Install kernel asset
@@ -120,7 +122,9 @@ install_kernel() {
 	info "install kernel"
 	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
 	popd
-	tar -czvf kernel.tar.gz ${destdir}
+	pushd ${destdir}
+	tar -czvf ../kata-kernel.tar.gz *
+	popd
 }
 
 #Install experimental kernel asset
@@ -132,7 +136,9 @@ install_experimental_kernel() {
 	info "install experimental kernel"
 	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh -e install
 	popd
-	tar -czvf kernel-experimental.tar.gz ${destdir}
+	pushd ${destdir}
+	tar -czvf ../kata-kernel-experimental.tar.gz *
+	popd
 }
 
 # Install static qemu asset
@@ -155,7 +161,9 @@ install_firecracker() {
 	mkdir -p "${destdir}/opt/kata/bin/"
 	sudo install -D --owner root --group root --mode 0744  firecracker/firecracker-static "${destdir}/opt/kata/bin/firecracker"
 	sudo install -D --owner root --group root --mode 0744  firecracker/jailer-static "${destdir}/opt/kata/bin/jailer"
-	tar -czvf firecracker-static.tar.gz "${destdir}/opt"
+	pushd ${destdir}
+	tar -czvf ../kata-firecracker-static.tar.gz *
+	popd
 }
 
 install_docker_config_script() {
@@ -219,7 +227,9 @@ ${prefix}/bin/kata-runtime --kata-config "${prefix}/share/defaults/${project}/co
 EOT
 	sudo chmod +x kata-qemu-virtiofs
 
-	tar -czvf kata-components.tar.gz ${destdir}
+	popd
+	pushd ${destdir}
+	tar -czvf ../kata-components.tar.gz *
 	popd
 }
 
