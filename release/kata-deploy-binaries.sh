@@ -105,6 +105,7 @@ install_image() {
 	ln -sf "${image}" kata-containers.img
 	ln -sf "${initrd}" kata-containers-initrd.img
 	popd >>/dev/null
+	tar -czvf image.tar.gz ${destdir}
 }
 
 #Install kernel asset
@@ -116,6 +117,7 @@ install_kernel() {
 	info "install kernel"
 	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh install
 	popd
+	tar -czvf kernel.tar.gz ${destdir}
 }
 
 #Install experimental kernel asset
@@ -127,22 +129,19 @@ install_experimental_kernel() {
 	info "install experimental kernel"
 	DESTDIR="${destdir}" PREFIX="${prefix}" ./kernel/build-kernel.sh -e install
 	popd
+	tar -czvf kernel-experimental.tar.gz ${destdir}
 }
 
 # Install static qemu asset
 install_qemu() {
 	info "build static qemu"
 	"${script_dir}/../static-build/qemu/build-static-qemu.sh"
-	info "Install static qemu"
-	tar xf kata-qemu-static.tar.gz -C "${destdir}"
 }
 
 # Install static qemu-virtiofsd asset
 install_qemu_virtiofsd() {
 	info "build static qemu-virtiofs"
 	"${script_dir}/../static-build/qemu-virtiofs/build-static-qemu-virtiofs.sh"
-	info "Install static qemu-virtiofs"
-	tar xf kata-qemu-virtiofs-static.tar.gz -C "${destdir}"
 }
 
 # Install static firecracker asset
@@ -217,7 +216,15 @@ ${prefix}/bin/kata-runtime --kata-config "${prefix}/share/defaults/${project}/co
 EOT
 	sudo chmod +x kata-qemu-virtiofs
 
+	tar -czvf kata-components.tar.gz ${destdir}
 	popd
+}
+
+untar_binaries() {
+	info "Install static qemu"
+	tar xf kata-qemu-static.tar.gz -C "${destdir}"
+	info "Install static qemu-virtiofs"
+	tar xf kata-qemu-virtiofs-static.tar.gz -C "${destdir}"
 }
 
 main() {
@@ -250,6 +257,8 @@ main() {
 	install_qemu_virtiofsd
 	install_firecracker
 	install_docker_config_script
+
+	untar_binaries
 
 	tarball_name="${destdir}.tar.xz"
 	pushd "${destdir}" >>/dev/null
