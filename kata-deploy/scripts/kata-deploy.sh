@@ -15,6 +15,7 @@ containerd_conf_file_backup="${containerd_conf_file}.bak"
 
 shims=(
 	"qemu"
+	"qemu-virtiofs"
 	"nemu"
 	"fc"
 )
@@ -160,6 +161,10 @@ function configure_containerd() {
         runtime_type = "io.containerd.kata-qemu.v2"
         [plugins.cri.containerd.runtimes.kata-qemu.options]
 	      ConfigPath = "/opt/kata/share/defaults/kata-containers/configuration-qemu.toml"
+     [plugins.cri.containerd.runtimes.kata-qemu-virtiofs]
+        runtime_type = "io.containerd.kata-qemu-virtiofs.v2"
+        [plugins.cri.containerd.runtimes.kata-qemu-virtiofs.options]
+	      ConfigPath = "/opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml"
      [plugins.cri.containerd.runtimes.kata-nemu]
         runtime_type = "io.containerd.kata-nemu.v2"
         [plugins.cri.containerd.runtimes.kata-nemu.options]
