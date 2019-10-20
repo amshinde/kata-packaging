@@ -11,7 +11,6 @@ set -o nounset
 
 supported_artifacts=(
   "install_docker_config_script"
-  "install_experimental_kernel"
   "install_firecracker"
   "install_image"
   "install_kata_components"
